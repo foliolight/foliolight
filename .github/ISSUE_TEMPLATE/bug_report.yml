@@ -1,0 +1,59 @@
+name: Bug report
+description: Something does not work as expected.
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not attach real authorization packages, real system details, or real findings.**
+        Reproduce the problem with the synthetic samples in `fixtures/`, or describe the file's structure without its content.
+        For security issues, use private vulnerability reporting instead of this form.
+  - type: checkboxes
+    id: no-sensitive-data
+    attributes:
+      label: Data check
+      options:
+        - label: This report contains no real package data or sensitive information.
+          required: true
+  - type: input
+    id: version
+    attributes:
+      label: Foliolight version
+      placeholder: "1.0.0 (from Help > About or foliolight-cli --version)"
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version and architecture
+      placeholder: "Windows 11 24H2 x64"
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode
+      options:
+        - Per-user
+        - Portable
+        - Not sure
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Use synthetic files only.
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of foliolight-cli doctor (optional)
+      description: Review it first and remove any paths you consider sensitive.
+      render: text

@@ -1,0 +1,34 @@
+name: Feature request
+description: Suggest an improvement.
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check the project principles and non-goals in docs/PLAN.md first.
+        Foliolight stays local, read-only for package files, and free of background activity.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the reviewer's task or pain point.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: checkboxes
+    id: principles
+    attributes:
+      label: Principles check
+      options:
+        - label: This does not require network access, background services, or writing to package files.
+          required: true
+        - label: This could not be done with a view schema or schema pack instead of a code change (or I explain why below).
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

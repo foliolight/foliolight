@@ -1,0 +1,40 @@
+name: New file format or view schema
+description: Request support for a file format, or propose a view schema or pack.
+labels: ["format", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not attach real files.** Link to a public specification or attach a small synthetic example.
+  - type: input
+    id: format
+    attributes:
+      label: Format or document type
+      placeholder: "for example, SARIF 2.1.0 or a vendor POA&M export"
+    validations:
+      required: true
+  - type: input
+    id: spec
+    attributes:
+      label: Link to public specification or schema
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What is needed?
+      options:
+        - A view schema for a format Foliolight already parses (JSON, XML, YAML)
+        - A new parser for a format Foliolight cannot read yet
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Synthetic example
+      description: A small, made-up example of the file structure.
+      render: text
+  - type: textarea
+    id: view
+    attributes:
+      label: How should it be displayed?
+      description: Sections, tables, and fields a reviewer needs to see.

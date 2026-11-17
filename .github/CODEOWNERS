@@ -1,0 +1,13 @@
+# Placeholder team names: create these teams when the GitHub organization exists.
+* @foliolight/maintainers
+
+/crates/foliolight-core/src/parsers/   @foliolight/core-security
+/crates/foliolight-core/src/launcher/  @foliolight/core-security
+/crates/foliolight-core/src/updater/   @foliolight/core-security
+/crates/foliolight-core/src/config/    @foliolight/core-security
+/app/src-tauri/                        @foliolight/core-security
+/.github/workflows/                    @foliolight/core-security
+/schemas/spec/                         @foliolight/maintainers
+/LICENSE                               @foliolight/maintainers
+/GOVERNANCE.md                         @foliolight/maintainers
+/SECURITY.md                           @foliolight/maintainers
