@@ -117,6 +117,32 @@ OSCAL:    system-security-plan 1.1.2
 Schemas:  builtin:oscal/ssp (selected), example-publisher/oscal-ssp-compact
 ```
 
+`detect --fit` also runs the quick fit check and the informational structure check from [opening-files](opening-files.md) and reports new, missing, and required fields.
+
+### hash
+
+```
+foliolight-cli hash <file>... [--algorithm sha256|sha384|sha512] [--expect <hash>] [--sums <SHA256SUMS>]
+```
+
+- Prints the hash of each file in `sha256sum` format, so the output can be compared with a hash list from the CSP.
+- `--expect` compares with a hash the user supplies. It accepts uppercase or lowercase, spaces, a `sha256:` prefix, or a full `sha256sum` line. Exit code 0 on match, 4 on mismatch.
+- `--sums` checks every listed file against a hash list file. Files in the list that are missing are reported.
+- The wording mirrors the app: "matches the hash you supplied," never "authentic" or "verified as genuine."
+
+```
+> foliolight-cli hash "D:\Packages\Aster Example Cloud\SSP\ssp-2026-10.json" --expect 9F2C...41AB
+Match: SHA-256 of ssp-2026-10.json matches the hash you supplied.
+```
+
+### export
+
+```
+foliolight-cli export <file> --dataset <id> [--view <schema-id>] [--filter <field>=<value>]... [--sort <field>[:desc]] [--columns visible|all] [--raw] --format csv|xlsx --out <path> [--no-about]
+```
+
+Exports a dataset from a file using the same engine, column labels, and safety rules as the app (see [export](export.md)). Without `--view`, the view that the app would choose is used. Refuses to overwrite an existing file unless `--force` is given. Exit code 7 if the output location is not writable.
+
 ### schema
 
 ```

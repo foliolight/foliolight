@@ -18,7 +18,7 @@ These wireframes are validated with a clickable prototype and reviewer sessions 
 | [=] Foliolight  | Library: [Agency packages  v] | [Find in file...        ] | (o) [?] [*] |
 +----------------------+---------------------------------------------+-----------------+
 | LIBRARY         [R]  | Aster Example Cloud > SSP > ssp-2026-10.json | DETAILS|COMMENTS|
-| [Filter CSPs...   ]  | Current version | 12.4 MB | Modified 10/14  |                 |
+| [Filter CSPs...   ]  | Current | 12.4 MB      [ssp-2026-10 ..41ab] |                 |
 |                      | [Document] [Outline] [Source]   View as: [v]| (panel content) |
 | v Aster Example Cl.  |---------------------------------------------|                 |
 |   v SSP          (2) |                                             |                 |
@@ -34,6 +34,7 @@ These wireframes are validated with a clickable prototype and reviewer sessions 
 | JSON | OSCAL SSP 1.1.2 | View: builtin:oscal/ssp | Indexed | 2 comments (1 changed)  |
 +--------------------------------------------------------------------------------------+
  Legend: [R] refresh  (o) update status icon  [?] help  [*] settings  * current version
+         [ssp-2026-10 ..41ab] file identity badge (file name and end of SHA-256), see Section 4A
 ```
 
 Regions (each is an ARIA landmark):
@@ -74,7 +75,8 @@ v Cobalt Example Systems
 
 - Rows show only listing metadata. Nothing is parsed until the user opens a file.
 - Version ordering marked "estimated" when the strategy fell back (see [library-convention](library-convention.md#5-version-and-current-file-rules)).
-- Context menu (also Shift+F10): Open, Open in new tab, Pin as current, Show in Explorer, Copy path, Map folder to type.
+- Context menu (also Shift+F10): Open, Open in new tab, Pin as current, Show in Explorer, Copy path, Copy SHA-256, Map folder to type, Choose view for this folder.
+- When the files in a folder are ordered by the date inside each file and that disagrees with the dates on disk, the folder shows a small note explaining which order is used.
 - Status markers (`*`, `!`, `@`, `~`) always come with text, so meaning never depends on a symbol or color alone.
 
 ## 4. File viewer
@@ -100,7 +102,7 @@ v Control implementations (325)                 [Chart: by status]
   | AC-2     | Partial     | 5          | 2 comments (1 content changed) |
   | AC-2(1)  | Planned     | 1          |                                |
   +----------+-------------+------------+--------------------------------+
-  Rows 1 to 50 of 325                                         [Load more]
+  Rows 1 to 50 of 325                          [Export...]    [Load more]
 
 > Back matter (12 resources)
     boundary-diagram  image/png  (inline preview)
@@ -138,6 +140,7 @@ N3  ####======.......  88                                         [Show as table
 - **Edit charts** opens the dashboard editor from the schema builder for this page, with live preview. Changes save to the user's copy of the schema for this document type.
 - **Chart this column** is available in every table column's header menu.
 - Charts that need fields this file does not have show "No data for this chart in this file."
+- Every chart menu has **Export chart data**, and every drill-down table has **Export...**, which writes exactly what is on screen to CSV or Excel (see [export](export.md)).
 
 Chart accessibility:
 
@@ -177,6 +180,45 @@ You can browse the top-level sections while indexing continues.
 
 Progress is announced through a polite live region at 25 percent steps, not every update.
 
+### 4A. File identity badge and hash check
+
+The top-right corner of the viewer header always shows which exact file is open: the file name (shortened in the middle if needed) and the **last 8 characters of its SHA-256 hash**. This answers "which version am I looking at?" at a glance and makes it quick to compare with a hash list from the CSP ([issue #4](https://github.com/foliolight/foliolight/issues/4)).
+
+- The hash is computed on the background worker during the same read that indexes the file, so it adds almost no cost. Until it is ready, the badge reads `ssp-2026-10 ..computing`.
+- The accessible name is the full sentence: "Open file ssp-2026-10.json, SHA-256 ending 41ab 9c03. Select to check the hash."
+
+Selecting the badge (or pressing Ctrl+Shift+H) opens a small popover, not a blocking dialog:
+
+```
+ssp-2026-10.json                                              [x]
+Aster Example Cloud > SSP          12.4 MB   Modified 2026-10-14
+SHA-256  3b7e 0c55 ... 9d12 41ab 9c03                     [Copy full hash]
+
+Compare with a hash from the provider
+[ paste a hash here                                              ]
+  Result: Match. This file's SHA-256 matches the hash you pasted.
+
+Hash list in this folder: SHA256SUMS lists this file. Match.
+```
+
+Behavior:
+
+- **Paste box.** Accepts uppercase or lowercase, spaces or line breaks inside the hash, a `sha256:` prefix, or a whole line copied from a `sha256sum` style list. It compares as soon as something is pasted. No button is needed.
+- **Results**, each with an icon and text, never color alone:
+  - "Match. This file's SHA-256 matches the hash you pasted."
+  - "Does not match. This is not the file the hash was made from. It may be a different version, or it may have been changed. Check with the provider before relying on it."
+  - "This looks like a SHA-384 (or SHA-512) hash." Foliolight computes that algorithm on request and compares.
+  - "This looks like an MD5 (or SHA-1) hash. Those are too weak to rely on for this check. Ask the provider for SHA-256." The app does not compute them (ASSUMPTION A-27).
+  - "That doesn't look like a hash." Shown for anything else.
+- **Hash list in the folder.** If the document-type folder contains a hash list (`SHA256SUMS`, `*.sha256`, or `checksums.txt` in `sha256sum` format), the popover shows whether it lists this file and whether it matches. A hash list in the same folder only shows the file is unchanged since the list was made. It does not prove who made either one, and the popover says so in its help text.
+- **Narrow wording.** The UI never says "authentic," "verified," or "genuine." A match only means the bytes are identical to what the hash describes.
+- Results are kept for the session only. They are not saved, so a later check always reflects the file as it is now.
+- If the file changes on disk while open, the badge shows "File changed on disk" and the hash is recomputed after reload.
+
+### 4B. Notices when a file opens
+
+Whether the folder's view fits this file, suggested views for a new kind of file, and plain-language error panels are specified in [opening-files](opening-files.md). They appear as a notice region between the view tabs and the content, never as blocking dialogs.
+
 ## 5. Schema builder
 
 A guided, five-step flow with a live preview. Every step is a normal page, not a modal, so screen reader users can move freely.
@@ -203,7 +245,7 @@ STRUCTURE (inferred)                      | PREVIEW
 | 1 Sample | Pick a sample file. Foliolight infers a draft or offers a matching built-in schema as a starting point. |
 | 2 Content | Include or hide nodes. Choose section type: fields, table, list, cards, text. |
 | 3 Layout | Reorder sections and pages, rename labels, choose table columns, sorting, grouping, and filters. Define datasets and derived categories with a rule editor (pick a field, pick an operator, pick a value). Build dashboard pages by adding tiles and charts from a list; each widget previews with real counts from the sample. |
-| 4 Details | Formatters, enum labels, badges, anchors for comments, link and attachment handling, match rules (which files this applies to). |
+| 4 Details | Formatters, enum labels, badges, anchors for comments, link and attachment handling (including links to other documents from the same CSP), match rules (which files this applies to), and fit rules shown in plain words ("Files must have: a list of findings, each with an ID"). |
 | 5 Save | Name and ID, validation results with plain-language messages, save to user schemas, or export as a file for a pack. A "Show YAML" toggle shows the exact file. |
 
 Sensible defaults: if the user clicks Next through every step, the result is still a usable view.
@@ -284,6 +326,8 @@ Released 2026-11-10. Release notes: [Copy link]
 | Shift+F10 or Menu key | Context menu |
 | Ctrl+Alt+M | Add comment on the focused item |
 | Ctrl+G | Go to line (Source) or go to ID (Document, Outline) |
+| Ctrl+Shift+H | Open the file identity and hash check popover |
+| Ctrl+Shift+E | Export the focused table or chart data |
 | F5 | Refresh library |
 | Ctrl+Plus / Ctrl+Minus / Ctrl+0 | Zoom in, out, reset |
 | Esc | Close popover or cancel operation |

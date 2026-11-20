@@ -45,7 +45,7 @@ Foliolight is provided "as is," without warranty of any kind. It is not an offic
 | Document | Contents |
 | --- | --- |
 | [Project plan](docs/PLAN.md) | Vision, scope, architecture, technology choice, roadmap, risks, assumptions |
-| [Specifications](docs/specs/) | Library convention, formats, view schemas, schema packs, comments, configuration, CLI, UI |
+| [Specifications](docs/specs/) | Library convention, formats, view schemas, opening files and checks, export, schema packs, comments, configuration, CLI, UI |
 | [Threat model](docs/security/threat-model.md) | Security analysis and controls |
 | [Release plan](docs/release/release-and-distribution.md) | Signing, distribution, and updates |
 | [Test strategy](docs/testing/test-strategy.md) | Synthetic packages, hostile inputs, performance, accessibility |

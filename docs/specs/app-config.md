@@ -73,9 +73,21 @@ ui:
   density: comfortable         # comfortable | compact
 packs:
   dropFolders: []
-schemaBindings:
+schemaBindings:                # "Use this view for this folder" (see opening-files spec)
   - match: { library: main, csp: "Aster Example Cloud", documentType: SSP }
     schema: builtin:oscal/ssp
+  - match: { library: main, csp: "Cobalt Example Systems", documentType: VulnReports, fileGlob: "*-detail-*.json" }
+    schema: user/cobalt-vuln-detail
+openChecks:
+  fitNotices: true             # show "new fields" and "missing fields" notices
+  structureCheck: true         # informational structure check in the background
+  dismissedFields: []          # managed by "Don't show this again"
+export:
+  enabled: true                # policy can lock this to false
+  defaultFormat: xlsx          # xlsx | csv
+  defaultValues: as-shown      # as-shown | raw
+  aboutFile: true              # CSV: also write <name>.about.txt
+  startFolder: downloads       # downloads | last-used; the Save As dialog always appears
 logging:
   enabled: false
   level: info                  # info | debug
@@ -91,6 +103,7 @@ These are compiled in and cannot be relaxed by config or policy:
 - The web view never has network access.
 - XML DTDs are never processed.
 - Downloads are never executed.
+- Exports never contain images, attachments, formulas, macros, or clickable links (see [export](export.md#4-safety-rules)).
 
 ## 4. Precedence
 
@@ -111,6 +124,7 @@ locked:
   links.remoteUrls: copy-only
   links.launch.unknownTypes: block
   limits.maxFileSizeMB: 256
+  export.enabled: true               # set false to remove export where data handling rules require it
 trust:
   preseedFile: trust.yaml            # relative to the policy file
   allowUserKeys: false               # users cannot add their own pack keys
