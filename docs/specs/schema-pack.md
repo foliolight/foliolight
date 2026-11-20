@@ -124,6 +124,10 @@ pinnedPacks:
 - A key with `status: revoked` causes all packs signed with it to drop to "Unsigned" with a revocation warning.
 - Signatures use minisign (Ed25519) by default (ASSUMPTION A-17). Sigstore is a community open question.
 
+### Bundled packs
+
+A bundled pack ships inside Foliolight and is a normal pack in every other respect: same layout, validation, hashing, and precedence. Bundled packs use the reserved `foliolight/` namespace, the built-in trust level, and a `PROVENANCE.yaml` listing the source URL, retrieval date, and SHA-256 of every third-party file they copy. CI fails if a copied file's hash differs from its entry. Each bundled pack has an on/off setting that policy can lock (see [app-config](app-config.md#3-settings-file)). The first one is [the FedRAMP JSON schema pack](bundled-program-schemas.md).
+
 ## 7. What "no code" means, enforced
 
 - File type allowlist and structural validation (Section 2).

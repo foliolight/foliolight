@@ -272,6 +272,8 @@ The chart engine is generic and ships in the core. Dashboards tied to a specific
 
 Some programs publish their own **plain JSON schemas** (not OSCAL) for machine-readable submission artifacts, such as package overviews, vulnerability detail reports, or change notifications. Those are handled the same way: detection reads the file's `$schema` value, a pack view matches it with `jsonSchemaId`, and the pack can ship the schema file for the structure check. The repository includes a second example pack, `packs/examples/example-publisher.program-json-artifacts`, and a synthetic fixture whose `$schema` points at one such published schema, so detection of a non-OSCAL package is tested from the start ([issue #2](https://github.com/foliolight/foliolight/issues/2)).
 
+The one program's schemas that ship with the app are the JSON schemas FedRAMP publishes. They are delivered as a **bundled pack** (`foliolight/fedramp-json`, built-in trust level), not as core code, and can be switched off. See [bundled-program-schemas](bundled-program-schemas.md). Their views use the real field names from the published schemas, which is why A-25 now applies only to category definitions the schemas do not spell out.
+
 ## 7. Formatters
 
 Formatters come from a fixed list. Schemas cannot define new ones.
@@ -439,4 +441,4 @@ structureSchema:
   appliesWhen: { jsonSchemaId: "https://example.org/schemas/*/vuln-report*.json" }
 ```
 
-Built-in OSCAL views reference bundled OSCAL schemas. Pack views may ship their own schema files; JSON Schema files are an allowed pack file type (see [schema-pack](schema-pack.md#allowed-file-types)).
+Built-in OSCAL views reference bundled OSCAL schemas. The bundled FedRAMP pack's views reference the bundled copies of the published FedRAMP JSON schemas, including their Common Definitions file for `$ref` resolution. Pack views may ship their own schema files; JSON Schema files are an allowed pack file type (see [schema-pack](schema-pack.md#allowed-file-types)).

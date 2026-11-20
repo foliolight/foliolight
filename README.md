@@ -24,7 +24,7 @@ Foliolight is a **stopgap and a demonstration**. It shows how much easier review
 - Browse a folder of packages organized by provider and document type, without parsing anything until you open it.
 - Show any JSON, XML, or YAML file as a readable outline, with OSCAL-aware views for common package documents.
 - Display embedded images and open linked local files safely in your default application.
-- Let you build your own views for new file types with a friendly schema builder, and load ready-made view packs from partners.
+- Let you build your own views for new file types with a friendly schema builder, and load ready-made view packs from partners. A pack of views for the JSON schemas that FedRAMP publishes comes bundled and can be switched off (Foliolight is not affiliated with or endorsed by FedRAMP).
 - Let reviewers keep local comments that survive when a provider sends a newer version.
 - Provide a command-line companion for scripting.
 
@@ -45,7 +45,7 @@ Foliolight is provided "as is," without warranty of any kind. It is not an offic
 | Document | Contents |
 | --- | --- |
 | [Project plan](docs/PLAN.md) | Vision, scope, architecture, technology choice, roadmap, risks, assumptions |
-| [Specifications](docs/specs/) | Library convention, formats, view schemas, opening files and checks, export, schema packs, comments, configuration, CLI, UI |
+| [Specifications](docs/specs/) | Library convention, formats, view schemas, opening files and checks, export, bundled program schemas, schema packs, comments, configuration, CLI, UI |
 | [Threat model](docs/security/threat-model.md) | Security analysis and controls |
 | [Release plan](docs/release/release-and-distribution.md) | Signing, distribution, and updates |
 | [Test strategy](docs/testing/test-strategy.md) | Synthetic packages, hostile inputs, performance, accessibility |

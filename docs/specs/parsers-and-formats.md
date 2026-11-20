@@ -228,7 +228,7 @@ CSV cannot carry nested data (such as controls with statements), embedded attach
 There are two checks, both described in [opening-files](opening-files.md):
 
 - **Quick fit check** (Phase 2): every time a file opens in a folder that already has a view, compare a sample of the file with the view's fit rules. Target under 200 ms.
-- **Informational structure check** against a published schema: OSCAL JSON in Phase 2, pack-supplied JSON Schemas in Phase 4, OSCAL XML (XSD) in Phase 7. This runs in the background and is never a compliance determination.
+- **Informational structure check** against a published schema: OSCAL JSON and the bundled FedRAMP JSON schemas in Phase 2, pack-supplied JSON Schemas in Phase 4, OSCAL XML (XSD) in Phase 7. This runs in the background and is never a compliance determination.
 
 The JSON Schema validator must have network and file reference resolution disabled. It resolves `$ref` only against schema files already loaded from the app or the pack. Licensing of bundled OSCAL schemas must be reviewed against the dependency policy before inclusion.
 
