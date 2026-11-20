@@ -89,8 +89,8 @@ primaryFiles:
   include: ["*.json", "*.xml", "*.yaml", "*.yml"]
   exclude: ["*-schema.json"]
 versioning:
-  strategy: filename-pattern                         # mtime | filename-pattern | oscal-last-modified
-  pattern: "(?P<date>\\d{4}-\\d{2}(-\\d{2})?)"
+  strategy: auto                                     # auto (default) | document-date | filename-pattern | mtime
+  pattern: "(?P<date>\\d{4}-\\d{2}(-\\d{2})?)"       # optional; used by auto and filename-pattern
   compare: date                                      # date | semver | integer | natural
   fallback: mtime
 ```
@@ -105,17 +105,44 @@ versioning:
 
 ## 5. Version and current-file rules
 
-**Why not just "newest modified time":** file modified times change when files are downloaded, copied across drives or shares, restored from backup, or synced. The newest timestamp is not always the newest package. Strategies:
+### Why the default is the date inside the document
+
+The expected workflow is that an agency adds each file to the library as it is downloaded and never edits it afterward. In that workflow, file modified times would stay in the right order on their own.
+
+In practice that ordering breaks easily. Copying a folder to another drive or share, unzipping an archive, restoring from backup, or syncing through OneDrive can reset or reshuffle modified times. After that, the newest timestamp on disk is not necessarily the newest package. A date written inside the document by the provider's own tool does not change when the file is copied, so it is the better first signal when the format has one.
+
+Version numbers or dates in file names, when providers use them consistently, are the next best signal. Modified time remains the last fallback, because every file has one.
+
+**Implementation requirement:** the version-ordering code must carry a short comment stating this rationale (in-document date first because copies and syncs reset modified times; modified time kept as the fallback), so future contributors do not "simplify" it back to modified time.
+
+### Strategies
 
 | Strategy | How it decides | Cost |
 | --- | --- | --- |
-| `mtime` (default) | Latest last-modified time. | Free (from directory listing). |
+| `auto` (default) | Tries, in order: the in-document date, then a version or date in the file name, then modified time. Each step is used only to rank files the previous step could not rank or left tied. | One header read per primary file in a document-type folder, the first time that folder is expanded in a session. |
+| `document-date` | Only the in-document date, falling back to modified time. | Same header read. |
 | `filename-pattern` | Extracts a version or date from the file name with a regex and compares it. | Free. |
-| `oscal-last-modified` | Reads `metadata/last-modified` from the OSCAL header. | Reads up to the first 64 KB of each candidate, **only** when the user opens that document type, never during the initial listing. |
+| `mtime` | Latest last-modified time. | Free (from directory listing). |
 
-Rules:
+**In-document date sources:**
 
-- If the chosen strategy cannot rank a file (no pattern match, no OSCAL metadata), the `fallback` strategy is used, and the UI marks that file's ordering as "estimated."
+| Format | Field |
+| --- | --- |
+| OSCAL (all models) | `metadata/last-modified` |
+| Other formats | A `versionField` declared by the view schema or schema pack bound to that document type (for example, a report-generated date). Without one, this step is skipped. |
+
+**Built-in file name patterns** used by `auto` when no `pattern` is configured: ISO dates (`2026-10-14`, `2026-10`, `20261014`) and version markers (`v3`, `v3.2`, `rev 4`). A configured `pattern` replaces these.
+
+### Header reads stay cheap
+
+- Only the first 64 KB of each primary file is read, and only when the user expands that document-type folder. The initial library scan never opens files.
+- Results are cached in memory for the session, keyed by path, size, and modified time, so a folder is read once.
+- Cloud-only placeholders are skipped (Section 8) and fall back to file name or modified time.
+
+### Rules
+
+- If no step can rank a file, it is ranked by modified time and the UI marks its ordering as "estimated."
+- If the date inside the documents and the modified times disagree about which file is newest, the folder shows a small note: "Ordered by the date inside each file. The file dates on disk suggest a different order." This makes the choice visible without blocking anything.
 - The user can **pin** any file as current. Pins are stored in app config (not in the library) keyed by library ID, CSP, and document type.
 - Older versions are listed under the current file, newest first.
 

@@ -135,6 +135,10 @@ Decoded embedded attachments (for example, a base64 PDF) are never written to te
 | T-28 | Comments store needs stronger protection | Out of scope for v1: rely on NTFS permissions and encrypted volumes. Optional encryption is an open question. |
 | T-29 | Crash reports sent by Windows Error Reporting | Governed by OS policy; documented for administrators (risk R-13). Foliolight sends nothing itself. |
 | T-30 | Real package data posted in public issues | Issue templates warn; maintainers remove and purge sensitive attachments; SECURITY.md explains how to share safely. |
+| T-37 | Exported spreadsheets spread package data or carry active content | Export always asks where to save (Save As dialog starting in Downloads), confirms before saving inside a library folder, sanitizes suggested file names for Windows, shows a sensitivity reminder, and can be disabled by policy (`export.enabled`). Exports are text only: no images, attachments, formulas, macros, external links, or clickable hyperlinks; CSV values are prefixed against formula injection. See [export](../specs/export.md#4-safety-rules). |
+| T-38 | Reviewer over-trusts a hash match | The hash check says only "matches the hash you pasted." A matching hash list in the same folder is described as showing the file is unchanged since the list was made, not who made it. MD5 and SHA-1 are refused as too weak (ASSUMPTION A-27). Authenticity depends on getting the hash from the provider through a separate trusted channel, which the help text explains. |
+| T-39 | Cross-document link reaches outside the CSP folder | Targets resolve only through the library mapping to primary files of the same CSP, then pass the same path validation as other local links (6.3). Identifiers are matched as data in the target's ID index, never used to build paths. |
+| T-40 | Published schema used for the structure check triggers network or file access | Validator runs with remote and file `$ref` resolution disabled; only schemas bundled with the app or shipped inside a verified pack are loaded. The check is informational, bounded in time and issue count, and never blocks opening. |
 
 ### 6.6 Update channel
 

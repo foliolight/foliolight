@@ -18,6 +18,8 @@ example-publisher.oscal-ssp-compact/
   schemas/
     ssp-compact.view.yaml
     poam-compact.view.yaml
+  structure/
+    vuln-report-1.2.schema.json   Optional published schema for the structure check
   docs/
     README.md               Plain Markdown shown in the pack details screen
   SHA256SUMS                Hash of every file except SHA256SUMS and its signature (required)
@@ -28,7 +30,7 @@ example-publisher.oscal-ssp-compact/
 
 | Extension | Purpose |
 | --- | --- |
-| `.yaml`, `.yml`, `.json` | Manifest and schemas |
+| `.yaml`, `.yml`, `.json` | Manifest, view schemas, and published JSON Schema files used for the informational structure check (`*.schema.json`) |
 | `.md`, `.txt` | Documentation (rendered without raw HTML) |
 | `.png` | Documentation images (size-limited) |
 | `SHA256SUMS`, `SHA256SUMS.minisig` | Integrity and signature |

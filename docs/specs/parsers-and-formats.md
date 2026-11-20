@@ -148,7 +148,7 @@ YAML is interpreted with the YAML 1.2 core schema, so values like `no` and `on` 
 | --- | --- | --- |
 | JSON, XML, YAML (generic) | 1 | Outline and Source views |
 | OSCAL (all six model families) | 1 (generic OSCAL view), 2 (built-in Document views) | |
-| CSV | 7 | RFC 4180, delimiter sniffing, table view |
+| CSV | 2 | First-class machine-readable input: generic table view, datasets, charts, and dashboards. See Section 9A. Export of on-screen tables to CSV and XLSX is covered separately in [export](export.md). |
 | XLSX (read-only) | 7 | Many POA&M deliverables are spreadsheets. Values only; formulas shown as text, never evaluated; macros ignored. |
 | SARIF | 7 | Results table grouped by rule and severity |
 | CycloneDX (JSON, XML) | 7 | Components, licenses, vulnerabilities |
@@ -157,9 +157,80 @@ YAML is interpreted with the YAML 1.2 core schema, so values like `no` and `on` 
 | Zip archives (read-only) | 7 | Read in memory without extraction; strict limits on entry count, total expanded size, compression ratio, and path names |
 | PDF, DOCX, VSDX, draw.io | Not planned in-app | Open in the default application through the safe launcher |
 
-## 10. Optional schema validation (Phase 7)
+## 9A. CSV as a machine-readable input
 
-Foliolight may bundle published OSCAL JSON Schemas to show **informational** validation results (never a compliance determination). Licensing of bundled schemas must be reviewed against the dependency policy before inclusion.
+CSV is accepted as a machine-readable format. It is flat and carries no types or schema of its own, so Foliolight asks for as little as possible up front and lets a view add meaning later. The main use is reports that some providers deliver as CSV while others deliver JSON or XML, such as vulnerability detail reports (VDR), inventories, and POA&M lists.
+
+### Reading
+
+| Aspect | Behavior |
+| --- | --- |
+| Standard | RFC 4180, including quoted fields with commas and line breaks. |
+| Delimiter | Sniffed from the first 64 KB: comma, semicolon, tab, or pipe. The status bar shows the result, and the reviewer can override it. |
+| Encoding | UTF-8 (with or without BOM) and UTF-16 with BOM. Anything else is read as Windows-1252, with a warning. |
+| Header row | The first non-empty row by default. A view can set `csv.headerRow` (for example 3) for reports with title lines above the table. Without headers, columns are named `Column 1`, `Column 2`, and so on. |
+| Ragged rows | Rows with too few or too many cells are kept and flagged, and the extra cells are shown as `Extra 1`, `Extra 2`. |
+| Formulas | Cells that look like spreadsheet formulas (for example `=SUM(A1:A9)`) are shown as text. Nothing is ever evaluated. |
+| Types | Every cell is text until a view or the builder assigns a type. The builder suggests types by sampling (numbers, dates, booleans such as `Yes` and `No`). |
+
+### Node model
+
+A CSV file maps onto the same node model as other formats, so FPath, datasets, comments, and search work unchanged:
+
+```
+/rows            array, one item per data row
+/rows/*          object, one key per column header (original header text)
+/rows/*/<header> scalar cell value
+```
+
+Headers containing spaces or punctuation are addressed with a quoted key (`/rows/*/"Due Date"`). Datasets can also use the shorthand `column: Due Date`.
+
+### Minimal schema needs
+
+- **No view needed:** every CSV opens as a generic table with sorting, filtering, search, and "Chart this column" on every header.
+- **A small view unlocks dashboards:** a CSV view only needs a dataset that maps column headers to field names, plus date formats where the file does not use ISO 8601:
+
+  ```yaml
+  match:
+    formats: [csv]
+    all:
+      - csvHeaders: { includes: ["Finding ID", "Disposition", "Impact Rating"] }   # case-insensitive
+  datasets:
+    - id: vulns
+      source: /rows/*
+      key: { column: Finding ID }
+      fields:
+        disposition: { column: Disposition }
+        reachable:   { column: Internet Reachable, type: boolean, true: [Yes, Y, TRUE] }
+        exploitable: { column: Likely Exploitable, type: boolean, true: [Yes, Y, TRUE] }
+        impact:      { column: Impact Rating }
+        dueDate:     { column: Due Date, type: date, formats: ["MM/DD/YYYY", "YYYY-MM-DD"] }
+  ```
+
+- **Same dashboard across formats:** a CSV view can `extend` a JSON or XML view and replace only its `datasets` entry by `id` (see [view-schema Section 9](view-schema.md#9-extending-another-schema)). Pages, charts, tiles, and derived categories such as IRV+LEV, NIRV+LEV, and NLEV refer to field names, not paths, so they work unchanged. A reviewer sees the same VDR dashboard and the same counts whether one CSP sends JSON and another sends CSV.
+- **Fit rules** for CSV are header lists: `fit.required` names the columns a view cannot work without, and new columns trigger the same "new fields" notice as other formats (see [opening-files](opening-files.md)).
+
+### Large CSV files
+
+- One streaming pass records the byte offset of every 1,000th row, the header, and the dataset columns, so tables page and dashboards count without holding all rows as objects.
+- The same size limit as other formats applies (512 MB by default). Additional limits: 1,024 columns, 1 MB per cell, 32 KB per header.
+
+### Comments on CSV rows
+
+Comments anchor to the view's row key (for example, `Finding ID`) so they survive across monthly versions. Without a row key, they anchor to the row's line range and are more likely to become orphaned when rows change, which the UI explains.
+
+### What CSV cannot do
+
+CSV cannot carry nested data (such as controls with statements), embedded attachments, or a declaration of which format version it follows, and spreadsheet tools often change dates and long numbers when saving. Foliolight shows exactly what is in the file and flags values that do not convert, for example dates counted as "Unparseable." Whether a program accepts CSV for a given submission is decided by that program, not by Foliolight.
+
+## 10. Structure checks on open
+
+There are two checks, both described in [opening-files](opening-files.md):
+
+- **Quick fit check** (Phase 2): every time a file opens in a folder that already has a view, compare a sample of the file with the view's fit rules. Target under 200 ms.
+- **Informational structure check** against a published schema: OSCAL JSON in Phase 2, pack-supplied JSON Schemas in Phase 4, OSCAL XML (XSD) in Phase 7. This runs in the background and is never a compliance determination.
+
+The JSON Schema validator must have network and file reference resolution disabled. It resolves `$ref` only against schema files already loaded from the app or the pack. Licensing of bundled OSCAL schemas must be reviewed against the dependency policy before inclusion.
 
 ## 11. Document sessions and memory model
 

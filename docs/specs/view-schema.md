@@ -35,8 +35,11 @@ datasets: [ ... ]                             # Section 6A: reusable record sets
 pages: [ ... ]                                # Section 6B: optional tabs, for example a dashboard page
 sections: [ ... ]                             # Section 6 (used directly when there are no pages)
 hidden: [ ... ]                               # FPath patterns hidden everywhere
-links: { ... }                                # Section 8
+links: { ... }                                # Section 8 (including cross-document links, 8A)
 attachments: { ... }                          # Section 8
+versionField: /report/generated-date          # optional: in-document date used for version ordering
+fit: { ... }                                  # Section 14: what a file must contain for this view to apply
+structureSchema: { ... }                      # Section 15: published schema for the informational structure check
 ```
 
 ## 4. Match rules
@@ -45,7 +48,7 @@ A schema applies to a file when its `match` block is satisfied. All listed condi
 
 ```yaml
 match:
-  formats: [json, yaml, xml]
+  formats: [json, yaml, xml]    # also csv
   all:
     - oscal:
         model: system-security-plan
@@ -64,7 +67,8 @@ Available conditions:
 | `oscal` | OSCAL model and optional version range. |
 | `rootKey` | JSON or YAML root key equals this value. |
 | `rootElement` | XML root element, with optional `namespace`. |
-| `jsonSchemaId` | The file's `$schema` value equals this string. |
+| `jsonSchemaId` | The file's `$schema` value equals this string, or matches it as a glob (for example `https://example.org/schemas/*/vuln-report*.json`), so one view can cover several published versions. The value is only compared as text; it is never fetched. |
+| `csvHeaders` | CSV only: `{ includes: [...] }` or `{ equals: [...] }`, compared case-insensitively with the header row. This is usually the only match rule a CSV view needs. |
 | `exists` | An FPath resolves to at least one node. Evaluated on the first 64 KB only, to keep matching cheap. |
 | `equals` | `{ path, value }`: an FPath resolves to this scalar. Same 64 KB rule. |
 | `fileGlob` | File name glob. |
@@ -180,6 +184,8 @@ Condition operators (fixed list, no expressions): `equals`, `notEquals`, `in`, `
 
 Field `type` values: `text` (default), `number`, `boolean`, `date`, `datetime`. Values that do not convert are counted as "Unparseable" instead of being dropped silently.
 
+Mainly for CSV, a field can use `column: <header>` instead of `path`. Type conversion can be told how the file writes values: `formats` for dates (for example `["MM/DD/YYYY", "YYYY-MM-DD"]`, tried in order) and `true` and `false` lists for booleans (for example `true: [Yes, Y, TRUE]`). See [parsers-and-formats Section 9A](parsers-and-formats.md#9a-csv-as-a-machine-readable-input).
+
 The field paths and category names above are illustrative. Real vulnerability report formats name their fields differently, and the published definitions of each category belong to whoever defines the format. That is why program-specific views ship as schema packs (Section 6D), not in the core.
 
 ## 6B. Pages
@@ -264,6 +270,8 @@ Behavior:
 
 The chart engine is generic and ships in the core. Dashboards tied to a specific program's vulnerability reporting format (for example, exposure classes or impact ratings defined by that program) ship as **schema packs**, so the core stays program-neutral (ASSUMPTION A-18). The repository includes an example pack, `packs/examples/example-publisher.vuln-report-dashboard`, built against a synthetic vulnerability report fixture. It shows a complete dashboard that partners can adapt to the real format (ASSUMPTION A-25: real field names are confirmed with whoever publishes that format).
 
+Some programs publish their own **plain JSON schemas** (not OSCAL) for machine-readable submission artifacts, such as package overviews, vulnerability detail reports, or change notifications. Those are handled the same way: detection reads the file's `$schema` value, a pack view matches it with `jsonSchemaId`, and the pack can ship the schema file for the structure check. The repository includes a second example pack, `packs/examples/example-publisher.program-json-artifacts`, and a synthetic fixture whose `$schema` points at one such published schema, so detection of a non-OSCAL package is tested from the start ([issue #2](https://github.com/foliolight/foliolight/issues/2)).
+
 ## 7. Formatters
 
 Formatters come from a fixed list. Schemas cannot define new ones.
@@ -301,6 +309,37 @@ attachments:
 
 App policy and the safe launcher always take precedence over schema settings. A schema can make link handling **stricter** but never looser than policy.
 
+## 8A. Cross-document links
+
+Review work crosses files: a POA&M item points at a control in the SSP, and an assessment result points at its plan. A cross-document link declares that a field holds an identifier found in **another primary file of the same CSP**, and selecting it opens that file at the match.
+
+```yaml
+links:
+  crossDocument:
+    - id: poam-to-ssp-control
+      label: Open control in SSP
+      field: "related-controls/*/control-id"     # FPath relative to the row or section
+      target:
+        documentType: SSP                        # same CSP, resolved through the library mapping
+        version: current                         # current | same-period (closest version by date)
+        idKind: oscal-control-id                 # oscal-control-id | oscal-uuid | schema-key | json-pointer
+        schema: builtin:oscal/ssp                # optional: view to open the target with
+```
+
+Resolution:
+
+1. Find the target document type in the same CSP folder. Use its current version unless `same-period` is set, in which case use the version whose date is closest to (and not after) the source file's date.
+2. If that file already has a session, look up the identifier in its ID index.
+3. Otherwise, read the target file once to build its ID index. This happens only when the user selects the link, never while listing or rendering. It shows progress if it takes longer than half a second.
+4. Open the target in a new tab, scrolled to and highlighting the match. If it is not found, say so plainly ("AC-2(4) is not in the current SSP, ssp-2026-10.json") and offer to open the file anyway.
+
+Known limits, stated deliberately:
+
+- No joins. A view cannot show columns from two files side by side in one table, and charts cannot count across files.
+- Same CSP only. Links never cross into another CSP's folder.
+- Local files only. Identifiers that point at remote documents are shown as text.
+- The target path goes through the same path validation as every other local link (see [threat model](../security/threat-model.md#63-paths-and-safe-external-launch)).
+
 ## 9. Extending another schema
 
 `extends: builtin:oscal/ssp@^1` inherits a base schema. The extending schema can:
@@ -309,6 +348,26 @@ App policy and the safe launcher always take precedence over schema settings. A 
 - Add new sections, positioned with `before: <id>` or `after: <id>`.
 - Remove a section with `{ id: <id>, remove: true }`.
 - Add `hidden` patterns.
+- Replace a dataset by using the same dataset `id`, while keeping the base schema's pages, charts, and tiles. This is how one dashboard serves the same kind of report delivered in different formats: a CSV view extends the JSON view, changes `match` to `formats: [csv]` with `csvHeaders`, and maps the same field names to CSV columns.
+
+  ```yaml
+  apiVersion: foliolight/view-schema/v1
+  kind: ViewSchema
+  metadata: { id: example-publisher/vuln-report-csv, version: 1.0.0, title: Vulnerability report (CSV) }
+  extends: example-publisher/vuln-report-dashboard@^1
+  match:
+    formats: [csv]
+    all: [ { csvHeaders: { includes: ["Finding ID", "Disposition"] } } ]
+  datasets:
+    - id: vulns                      # same id: replaces the base dataset, keeps all pages and charts
+      source: /rows/*
+      key: { column: Finding ID }
+      fields:
+        disposition: { column: Disposition }
+        # ...same field names as the base view
+  ```
+
+  A replaced dataset must define every field name the base pages use. Validation reports any that are missing.
 
 There is one level of inheritance only (no chains), to keep behavior predictable.
 
@@ -347,3 +406,37 @@ Inference produces a draft that is useful immediately and easy to edit.
 
 - `foliolight-cli schema validate <file>` and the builder both run JSON Schema validation, FPath syntax checks, unique section IDs, formatter names, and `extends` resolution.
 - Errors report file, line, column, and a plain-language message.
+
+## 14. Fit rules
+
+Fit rules say what a file must contain for a view to work. They drive the fast fit check that runs every time a file is opened in a folder that already has a view chosen (see [opening-files](opening-files.md)).
+
+```yaml
+fit:
+  required:                              # the view cannot work without these
+    - path: /vulnerability-report/findings
+      kind: array
+    - path: "/vulnerability-report/findings/*/id"
+  expected:                              # the view uses these; missing ones blank out columns, not the page
+    - "/vulnerability-report/findings/*/severity"
+    - "/vulnerability-report/findings/*/disposition"
+  newFields:
+    watch: "/vulnerability-report/findings/*"   # report keys here that the view does not show or hide
+    minShare: 0.2                               # ignore keys present in fewer than 20 percent of sampled records
+  sample: 500                                   # records sampled for the quick check
+```
+
+Defaults when `fit` is omitted: every dataset `source` and `key` path is required, every column and field path is expected, and new fields are watched under each dataset `source`. The schema builder writes an explicit `fit` block so reviewers can see and adjust it.
+
+## 15. Structure schema (informational check)
+
+A view may name the published schema the file is supposed to follow, so Foliolight can run the informational structure check described in [opening-files](opening-files.md#4-informational-structure-check).
+
+```yaml
+structureSchema:
+  kind: json-schema                       # json-schema | xsd (OSCAL XML, Phase 7)
+  file: schemas/vuln-report-1.2.schema.json   # shipped inside the app or the pack, never downloaded
+  appliesWhen: { jsonSchemaId: "https://example.org/schemas/*/vuln-report*.json" }
+```
+
+Built-in OSCAL views reference bundled OSCAL schemas. Pack views may ship their own schema files; JSON Schema files are an allowed pack file type (see [schema-pack](schema-pack.md#allowed-file-types)).
