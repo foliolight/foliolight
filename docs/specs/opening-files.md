@@ -55,7 +55,7 @@ When a file is opened in a document-type folder that has no view yet:
 
 When the file declares or is known to follow a published schema, and that schema is available locally, Foliolight checks the file against it in the background.
 
-- **Where the schema comes from:** bundled with the app (OSCAL JSON schemas) or shipped in a pack (`structureSchema`, see [view-schema](view-schema.md#15-structure-schema-informational-check)). Schemas are never downloaded. A schema reference (`$ref`) that points outside the local schema files is not followed, and the result says the check was partial.
+- **Where the schema comes from:** bundled with the app (OSCAL JSON schemas, and the JSON schemas FedRAMP publishes, see [bundled-program-schemas](bundled-program-schemas.md)) or shipped in a pack (`structureSchema`, see [view-schema](view-schema.md#15-structure-schema-informational-check)). Schemas are never downloaded. A schema reference (`$ref`) that points outside the local schema files is not followed, and the result says the check was partial.
 - **When:** after the first page appears, on a background thread. It never delays opening.
 - **Result:** a status bar item and a panel:
 
@@ -69,7 +69,8 @@ When the file declares or is known to follow a published schema, and that schema
   ```
 
 - **Limits:** stops after 200 issues and a 10-second budget for very large files, and says so. Results are kept for the session only.
-- **Phasing:** OSCAL JSON in Phase 2, with the OSCAL views. Pack-supplied schemas in Phase 4, with packs. OSCAL XML (XSD) in Phase 7.
+- **Wording for program schemas:** the result names the schema and its date, says a file that differs may still be acceptable, and never says "valid for submission" or "compliant." The check can be switched off per bundled pack.
+- **Phasing:** OSCAL JSON and the bundled FedRAMP schema files in Phase 2. Pack-supplied schemas and the bundled pack's views in Phase 4. OSCAL XML (XSD) in Phase 7.
 
 ## 5. Opening a file in a folder that already has a view
 
