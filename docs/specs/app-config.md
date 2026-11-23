@@ -78,6 +78,9 @@ schemaBindings:                # "Use this view for this folder" (see opening-fi
     schema: builtin:oscal/ssp
   - match: { library: main, csp: "Cobalt Example Systems", documentType: VulnReports, fileGlob: "*-detail-*.json" }
     schema: user/cobalt-vuln-detail
+bundledPacks:                  # packs that ship inside the app; each can be turned off
+  foliolight/fedramp-json:
+    enabled: true              # policy can lock this; off means no suggestions or checks for these files
 openChecks:
   fitNotices: true             # show "new fields" and "missing fields" notices
   structureCheck: true         # informational structure check in the background
@@ -125,6 +128,7 @@ locked:
   links.launch.unknownTypes: block
   limits.maxFileSizeMB: 256
   export.enabled: true               # set false to remove export where data handling rules require it
+  bundledPacks.foliolight/fedramp-json.enabled: true   # set false to ship nothing program-specific
 trust:
   preseedFile: trust.yaml            # relative to the policy file
   allowUserKeys: false               # users cannot add their own pack keys

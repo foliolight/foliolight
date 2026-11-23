@@ -119,6 +119,14 @@ Only permissive, Apache-2.0-compatible licenses are allowed in anything we ship.
 
 The fixed-version Windows Server build bundles Microsoft's WebView2 runtime, which is proprietary software redistributed under Microsoft's terms. It is not a library we link; it is a separately licensed component. The maintainers must explicitly approve this exception (or drop the fixed-version build and require agencies to install the WebView2 runtime themselves). This is listed as an open decision.
 
+### Bundled third-party data (published schemas)
+
+Foliolight bundles copies of schemas that programs publish, starting with the JSON schemas FedRAMP publishes (see [bundled-program-schemas](../specs/bundled-program-schemas.md)). These are data files, not dependencies, but they are redistributed, so the same care applies:
+
+- Their redistribution terms must be confirmed with the publisher and recorded before they are committed (ASSUMPTION A-32). The publisher's schemas page does not state terms.
+- Each file is recorded with its real license or public-domain status in `REUSE.toml` and `NOTICE`, and in the pack's `PROVENANCE.yaml` with source URL, retrieval date, and SHA-256.
+- Files are copied unmodified. If redistribution cannot be confirmed, the pack ships views only.
+
 ### Enforcement
 
 | Tool (candidates confirmed in Phase 0) | What it checks |
